@@ -1,435 +1,1436 @@
-import React, { useState, useMemo } from 'react';
-import { Calculator, CheckSquare, FileText, DollarSign, Users, Download } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adventist Academy Solutions - Professional Accounting for Adventist Academies</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-const ServiceCalculator = () => {
-  const [schoolName, setSchoolName] = useState('');
-  const [enrollment, setEnrollment] = useState('');
-  const [contactName, setContactName] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  
-  // Service categories with their base monthly hours and whether they're typically included
-  const [services, setServices] = useState({
-    // Core Services (usually included in base)
-    coreAccounting: {
-      name: 'Core Accounting & Monthly Close',
-      category: 'Core Services',
-      selected: true,
-      baseIncluded: true,
-      hours: 16,
-      tasks: ['Monthly closing', 'Financial statements', 'Board reporting packages', 'Depreciation']
-    },
-    bankRec: {
-      name: 'Bank Reconciliations (All Accounts)',
-      category: 'Core Services',
-      selected: true,
-      baseIncluded: true,
-      hours: 16.4,
-      tasks: ['Operating', 'Insurance', 'Endowment', 'Donation', 'Capital accounts']
-    },
-    auditPrep: {
-      name: 'Audit Preparation',
-      category: 'Core Services',
-      selected: true,
-      baseIncluded: true,
-      hours: 4,
-      tasks: ['Documentation organization', 'Digital backup systems', 'Auditor support']
-    },
-    
-    // Student Accounts (complexity driver)
-    studentAR: {
-      name: 'Student Accounts Receivable',
-      category: 'Student Accounts',
-      selected: false,
-      baseIncluded: false,
-      hours: 62,
-      complexityMultiplier: 1.0,
-      tasks: ['Tuition tracking', 'Invoicing in FACTS', 'Aging monitoring', 'Delinquent letters', 'Dorm/Cafeteria/Athletic fees', 'ASP deposits', 'Wire transfers']
-    },
-    studentAccounts: {
-      name: 'Student Account Management',
-      category: 'Student Accounts',
-      selected: false,
-      baseIncluded: false,
-      hours: 30,
-      tasks: ['Payment tracking', 'Financial plans', 'Parent communications', 'Scholarship management']
-    },
-    studentAP: {
-      name: 'Student Payables',
-      category: 'Student Accounts',
-      selected: false,
-      baseIncluded: false,
-      hours: 6.8,
-      tasks: ['Student tithe', 'Student payroll', 'Annual 1099 preparation']
-    },
-    
-    // Specialized Services
-    endowment: {
-      name: 'Endowment Fund Management',
-      category: 'Specialized',
-      selected: false,
-      baseIncluded: false,
-      hours: 16,
-      tasks: ['Interest tracking', 'Fluctuation monitoring', 'Contributions', 'Distribution calculations']
-    },
-    transportation: {
-      name: 'Transportation Accounting',
-      category: 'Specialized',
-      selected: false,
-      baseIncluded: false,
-      hours: 7.4,
-      tasks: ['IFTA reporting', 'Transportation transfers', 'Fuel documentation']
-    },
-    squareDeposits: {
-      name: 'Square/POS Reconciliation',
-      category: 'Specialized',
-      selected: false,
-      baseIncluded: false,
-      hours: 12,
-      tasks: ['Mission sale', 'Farm store', 'Business office transactions']
-    },
-    payroll: {
-      name: 'Payroll Processing Support',
-      category: 'Specialized',
-      selected: false,
-      baseIncluded: false,
-      hours: 8,
-      tasks: ['Expensing', 'Bank charges', 'Payroll withholding tracking']
-    },
-    hr: {
-      name: 'HR Documentation',
-      category: 'Specialized',
-      selected: false,
-      baseIncluded: false,
-      hours: 2.2,
-      tasks: ['Taskforce paperwork', 'Volunteer insurance', 'Per diem tracking', 'Education reimbursements']
-    },
-  });
+        :root {
+            --ocean-dark: #2c5f7c;
+            --ocean-medium: #4a8bad;
+            --ocean-light: #7eb3d1;
+            --ocean-pale: #b8dbe8;
+            --sand-light: #f5f7f9;
+            --sand-warm: #e8f1f5;
+            --text-dark: #2c3e50;
+            --text-medium: #546e7a;
+            --accent-coral: #ff8a65;
+            --white: #ffffff;
+        }
 
-  // Pricing tiers based on complexity
-  const pricingTiers = [
-    { min: 0, max: 50, base: 2200, label: 'Small Day School' },
-    { min: 50, max: 100, base: 2500, label: 'Medium Day School' },
-    { min: 100, max: 150, base: 2800, label: 'Large Day School / Small Boarding' },
-    { min: 150, max: 250, base: 3200, label: 'Medium Boarding Academy' },
-    { min: 250, max: 999, base: 3500, label: 'Large Boarding Academy' },
-  ];
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background-color: var(--sand-light);
+        }
 
-  const toggleService = (key) => {
-    setServices(prev => ({
-      ...prev,
-      [key]: { ...prev[key], selected: !prev[key].selected }
-    }));
-  };
+        /* Navigation */
+        nav {
+            background-color: var(--ocean-dark);
+            color: var(--white);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
 
-  const calculations = useMemo(() => {
-    // Determine base price tier
-    const enrollmentNum = parseInt(enrollment) || 0;
-    const tier = pricingTiers.find(t => enrollmentNum >= t.min && enrollmentNum <= t.max) || pricingTiers[0];
-    
-    // Calculate total hours for selected services
-    const selectedServices = Object.values(services).filter(s => s.selected);
-    const totalHours = selectedServices.reduce((sum, s) => sum + s.hours, 0);
-    
-    // Calculate additional cost for non-base services
-    let additionalCost = 0;
-    selectedServices.forEach(service => {
-      if (!service.baseIncluded) {
-        // Complex services like Student AR add more
-        const multiplier = service.complexityMultiplier || 1.0;
-        additionalCost += (service.hours / 10) * 100 * multiplier;
-      }
-    });
-    
-    const estimatedMonthly = Math.round(tier.base + additionalCost);
-    const estimatedAnnual = estimatedMonthly * 12;
-    
-    return {
-      tier,
-      totalHours,
-      estimatedMonthly,
-      estimatedAnnual,
-      selectedServices
-    };
-  }, [services, enrollment]);
+        nav .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-  const generateProposal = () => {
-    const proposalText = `
-PRELIMINARY SERVICE PROPOSAL
-Generated: ${new Date().toLocaleDateString()}
+        nav .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
 
-SCHOOL INFORMATION:
-${schoolName || '[School Name]'}
-${contactName ? `Contact: ${contactName}` : ''}
-${contactEmail ? `Email: ${contactEmail}` : ''}
-${enrollment ? `Enrollment: ${enrollment} students` : ''}
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+        }
 
-SERVICES SELECTED:
-${calculations.selectedServices.map(s => 
-  `✓ ${s.name} (${s.hours} hrs/month)\n  ${s.tasks.join(', ')}`
-).join('\n\n')}
+        nav a {
+            color: var(--white);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
 
-ESTIMATED PRICING:
-Base Tier: ${calculations.tier.label}
-Monthly Service Fee: $${calculations.estimatedMonthly.toLocaleString()}
-Annual Investment: $${calculations.estimatedAnnual.toLocaleString()}
+        nav a:hover {
+            color: var(--ocean-pale);
+        }
 
-Note: This is a preliminary estimate based on our discovery conversation.
-A formal proposal with exact pricing will be provided after reviewing your
-specific systems, enrollment details, and operational complexity.
+        nav a.active {
+            color: var(--accent-coral);
+            font-weight: 600;
+        }
 
-On-site assistant (15-20 hrs/week): School's responsibility (~$20-25K annually)
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
 
-NEXT STEPS:
-1. Review current accounting systems and workload
-2. Discuss transition timeline
-3. Provide formal proposal with exact pricing
-4. Answer any questions about service delivery
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--ocean-dark) 0%, var(--ocean-medium) 100%);
+            color: var(--white);
+            padding: 8rem 0 6rem;
+            text-align: center;
+        }
 
-Questions? Contact Kevin at [your email]
-    `.trim();
-    
-    const blob = new Blob([proposalText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${schoolName.replace(/\s+/g, '_') || 'School'}_Preliminary_Proposal.txt`;
-    a.click();
-  };
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Calculator className="w-8 h-8 text-indigo-600" />
-            <h1 className="text-3xl font-bold text-gray-800">Remote Accounting Services</h1>
-          </div>
-          <p className="text-gray-600">Discovery Call Calculator - Check services as you discuss them</p>
+        .hero .subtitle {
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            color: var(--ocean-pale);
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2.5rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.8;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-coral);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background-color: #ff6f47;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 138, 101, 0.4);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--white);
+            border: 2px solid var(--white);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--white);
+            color: var(--ocean-dark);
+        }
+
+        /* Section Styles */
+        section {
+            padding: 5rem 0;
+        }
+
+        section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            text-align: center;
+            color: var(--ocean-dark);
+        }
+
+        .section-alt {
+            background-color: var(--white);
+        }
+
+        /* Pathways Section - NEW */
+        .pathways-intro {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 4rem;
+            color: var(--text-medium);
+            font-size: 1.2rem;
+        }
+
+        .value-proposition-section {
+            margin-top: 3rem;
+        }
+
+        .value-intro h3 {
+            font-size: 2rem;
+        }
+
+        .pathways-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .pathway-card {
+            background: var(--white);
+            padding: 3rem;
+            border-radius: 15px;
+            box-shadow: 0 6px 25px rgba(44, 95, 124, 0.15);
+            border-top: 5px solid var(--ocean-medium);
+            transition: transform 0.3s;
+        }
+
+        .pathway-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 35px rgba(44, 95, 124, 0.2);
+        }
+
+        .pathway-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .pathway-card h3 {
+            color: var(--ocean-dark);
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .pathway-subtitle {
+            text-align: center;
+            color: var(--text-medium);
+            font-style: italic;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .pathway-benefits {
+            list-style: none;
+            padding: 0;
+            margin-top: 1.5rem;
+        }
+
+        .pathway-benefits li {
+            padding: 0.8rem 0;
+            padding-left: 2rem;
+            position: relative;
+            color: var(--text-dark);
+            font-size: 1.05rem;
+        }
+
+        .pathway-benefits li:before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+        }
+
+        .pathway-outcome {
+            background: linear-gradient(135deg, var(--ocean-light) 0%, var(--ocean-pale) 100%);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .pathway-outcome strong {
+            color: var(--ocean-dark);
+            font-size: 1.1rem;
+        }
+
+        /* Problem Section */
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .problem-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(44, 95, 124, 0.1);
+        }
+
+        .problem-card h3 {
+            color: var(--ocean-dark);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .problem-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .problem-card li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            color: var(--text-medium);
+        }
+
+        .problem-card li:before {
+            content: "⚠️";
+            position: absolute;
+            left: 0;
+        }
+
+        /* Services Section */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .service-card {
+            background: var(--white);
+            padding: 2.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(44, 95, 124, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(44, 95, 124, 0.15);
+        }
+
+        .service-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .service-card h3 {
+            color: var(--ocean-dark);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .service-card ul {
+            list-style: none;
+            padding: 0;
+            color: var(--text-medium);
+        }
+
+        .service-card li {
+            padding: 0.3rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .service-card li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--ocean-medium);
+            font-weight: bold;
+        }
+
+        /* Cost Comparison - ENHANCED */
+        .cost-intro {
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto 3rem;
+            color: var(--text-medium);
+            font-size: 1.1rem;
+        }
+
+        .cost-scenarios {
+            display: grid;
+            gap: 4rem;
+            margin-top: 3rem;
+        }
+
+        .scenario-section {
+            background: var(--white);
+            padding: 3rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(44, 95, 124, 0.1);
+        }
+
+        .scenario-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .scenario-header h3 {
+            color: var(--ocean-dark);
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .scenario-subtitle {
+            color: var(--text-medium);
+            font-size: 1.1rem;
+            font-style: italic;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .comparison-card {
+            padding: 2rem;
+            border-radius: 10px;
+            border: 2px solid var(--sand-warm);
+        }
+
+        .comparison-card.current {
+            background: #fff5f5;
+            border-color: #ffcccc;
+        }
+
+        .comparison-card.proposed {
+            background: #f0f9ff;
+            border-color: var(--ocean-pale);
+        }
+
+        .comparison-card h4 {
+            color: var(--ocean-dark);
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .cost-breakdown {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .cost-breakdown li {
+            padding: 0.5rem 0;
+            color: var(--text-dark);
+            border-bottom: 1px solid var(--sand-warm);
+        }
+
+        .cost-total {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--ocean-dark);
+            margin: 1rem 0;
+            padding-top: 1rem;
+            border-top: 2px solid var(--ocean-medium);
+        }
+
+        .reality-check {
+            background: var(--sand-warm);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+        }
+
+        .reality-check h5 {
+            color: var(--ocean-dark);
+            margin-bottom: 0.8rem;
+        }
+
+        .reality-check ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .reality-check li {
+            padding: 0.4rem 0;
+            color: var(--text-medium);
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .reality-check.current li:before {
+            content: "⚠️";
+            position: absolute;
+            left: 0;
+        }
+
+        .reality-check.proposed li:before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+        }
+
+        .value-proposition {
+            background: linear-gradient(135deg, var(--ocean-medium) 0%, var(--ocean-light) 100%);
+            color: var(--white);
+            padding: 2rem;
+            border-radius: 10px;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .value-proposition h4 {
+            color: var(--white);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .value-proposition p {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        /* Why Us Section */
+        .why-us-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .why-card {
+            text-align: center;
+        }
+
+        .why-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .why-card h3 {
+            color: var(--ocean-dark);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .why-card p {
+            color: var(--text-medium);
+            line-height: 1.8;
+        }
+
+        /* Process Section */
+        .process-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .step {
+            background: var(--white);
+            padding: 2.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(44, 95, 124, 0.1);
+            position: relative;
+        }
+
+        .step-number {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--ocean-medium);
+            color: var(--white);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .step h3 {
+            color: var(--ocean-dark);
+            margin-bottom: 1rem;
+            margin-top: 1rem;
+            font-size: 1.4rem;
+        }
+
+        .step p {
+            color: var(--text-medium);
+        }
+
+        /* Trust Section */
+        .trust-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .trust-column h3 {
+            color: var(--ocean-dark);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .trust-column ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .trust-column li {
+            padding: 1rem;
+            background: var(--white);
+            margin-bottom: 0.8rem;
+            border-radius: 8px;
+            padding-left: 3rem;
+            position: relative;
+            box-shadow: 0 2px 10px rgba(44, 95, 124, 0.08);
+        }
+
+        .trust-column li:before {
+            content: "🔒";
+            position: absolute;
+            left: 1rem;
+        }
+
+        /* FAQ Section */
+        .faq-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: var(--white);
+            margin-bottom: 1.5rem;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(44, 95, 124, 0.08);
+        }
+
+        .faq-question {
+            background: var(--sand-warm);
+            padding: 1.5rem 2rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--ocean-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .faq-question:hover {
+            background: var(--ocean-pale);
+        }
+
+        .faq-answer {
+            padding: 1.5rem 2rem;
+            color: var(--text-medium);
+            line-height: 1.8;
+            display: none;
+        }
+
+        /* CTA Section */
+        .final-cta {
+            background: linear-gradient(135deg, var(--ocean-dark) 0%, var(--ocean-medium) 100%);
+            color: var(--white);
+            padding: 6rem 0;
+            text-align: center;
+        }
+
+        .final-cta h2 {
+            color: var(--white);
+            margin-bottom: 1.5rem;
+        }
+
+        .final-cta p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .steps-list {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin: 3rem 0;
+            flex-wrap: wrap;
+        }
+
+        .cta-step {
+            flex: 0 1 250px;
+        }
+
+        .cta-step-number {
+            background: var(--accent-coral);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .cta-step p {
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--ocean-dark);
+            color: var(--white);
+            padding: 3rem 0 1rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h3 {
+            color: var(--ocean-pale);
+            margin-bottom: 1rem;
+        }
+
+        .footer-section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-section li {
+            padding: 0.5rem 0;
+        }
+
+        .footer-section a {
+            color: var(--white);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-section a:hover {
+            color: var(--ocean-pale);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid var(--ocean-medium);
+            color: var(--ocean-pale);
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .pathways-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.1rem;
+            }
+
+            .trust-grid {
+                grid-template-columns: 1fr;
+            }
+
+            nav ul {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            section {
+                padding: 3rem 0;
+            }
+        }
+
+        /* Smooth Scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <div class="logo">Adventist Academy Solutions</div>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="operational-excellence.html">Operational Excellence</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#why-us">Why Us</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
         </div>
+    </nav>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Left Column - School Info */}
-          <div className="md:col-span-1">
-            <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                School Information
-              </h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">School Name</label>
-                  <input
-                    type="text"
-                    value={schoolName}
-                    onChange={(e) => setSchoolName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500"
-                    placeholder="Adventist Academy"
-                  />
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <p class="subtitle">Professional Accounting for Small Adventist Academies</p>
+            <h1>Adventist Academy Solutions</h1>
+            <p>Empower your leadership to focus on strategic decisions, not data entry—with professional back-office accounting tailored to your school's needs</p>
+            <div class="cta-buttons">
+                <a href="#contact" class="btn btn-primary">Schedule Discovery Call</a>
+                <a href="#pathways" class="btn btn-secondary">Explore Solutions</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pathways Section - NEW -->
+    <section id="pathways">
+        <div class="container">
+            <h2>Two Pathways to Financial Excellence</h2>
+            <p class="pathways-intro">Every school's situation is different. Whether you have a business manager who needs support or you're managing without one, we provide the professional accounting foundation you need.</p>
+            
+            <div class="pathways-grid">
+                <!-- Pathway 1: Partnership -->
+                <div class="pathway-card">
+                    <div class="pathway-icon">🤝</div>
+                    <h3>Strategic Partnership</h3>
+                    <p class="pathway-subtitle">You have a Business Manager</p>
+                    
+                    <p style="color: var(--text-medium); margin-bottom: 1.5rem;">Transform your business manager from overwhelmed bookkeeper to strategic CFO. We handle the operational grind; they lead strategically.</p>
+                    
+                    <ul class="pathway-benefits">
+                        <li>Free your BM from data entry and reconciliations</li>
+                        <li>They focus on planning, forecasting, board advisory</li>
+                        <li>Make better decisions with time to analyze</li>
+                        <li>Develop budgets, not just process transactions</li>
+                        <li>Lead strategically, not react to crises</li>
+                    </ul>
+
+                    <div class="pathway-outcome">
+                        <strong>Outcome:</strong> Your business manager becomes a true CFO without adding headcount. Same or slightly higher cost, exponentially better strategic capacity.
+                    </div>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name</label>
-                  <input
-                    type="text"
-                    value={contactName}
-                    onChange={(e) => setContactName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500"
-                    placeholder="Principal Name"
-                  />
+
+                <!-- Pathway 2: Complete Service -->
+                <div class="pathway-card">
+                    <div class="pathway-icon">🎯</div>
+                    <h3>Complete Service</h3>
+                    <p class="pathway-subtitle">You don't have a Business Manager</p>
+                    
+                    <p style="color: var(--text-medium); margin-bottom: 1.5rem;">Get professional accounting execution AND strategic financial advisory—without the $80K-100K price tag of an experienced business manager.</p>
+                    
+                    <ul class="pathway-benefits">
+                        <li>Professional back-office accounting team</li>
+                        <li>Strategic financial guidance for leadership</li>
+                        <li>Part-time on-site assistant for physical tasks</li>
+                        <li>Audit-ready systems and documentation</li>
+                        <li>Save $20,000-40,000 annually vs. traditional model</li>
+                    </ul>
+
+                    <div class="pathway-outcome">
+                        <strong>Outcome:</strong> Professional financial management at sustainable cost. Your principal can focus on educational leadership, not accounting.
+                    </div>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Email</label>
-                  <input
-                    type="email"
-                    value={contactEmail}
-                    onChange={(e) => setContactEmail(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500"
-                    placeholder="principal@school.edu"
-                  />
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="section-alt">
+        <div class="container">
+            <h2>The Financial Leadership Challenge</h2>
+            <div class="problem-grid">
+                <div class="problem-card">
+                    <h3>Overwhelmed Business Managers</h3>
+                    <ul>
+                        <li>Drowning in data entry and reconciliations</li>
+                        <li>No time for strategic planning or analysis</li>
+                        <li>Books close late despite working overtime</li>
+                        <li>Operating as bookkeeper, not CFO</li>
+                    </ul>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Enrollment</label>
-                  <input
-                    type="number"
-                    value={enrollment}
-                    onChange={(e) => setEnrollment(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500"
-                    placeholder="150"
-                  />
-                  {enrollment && (
-                    <p className="text-sm text-indigo-600 mt-1">
-                      {calculations.tier.label}
+                <div class="problem-card">
+                    <h3>Schools Without Financial Leadership</h3>
+                    <ul>
+                        <li>Can't afford $80K-100K for experienced leadership</li>
+                        <li>Principal wearing too many hats</li>
+                        <li>No professional guidance for board decisions</li>
+                        <li>Making critical decisions without proper analysis</li>
+                    </ul>
+                </div>
+                <div class="problem-card">
+                    <h3>The Common Result</h3>
+                    <ul>
+                        <li>Books 30-60 days behind (or more)</li>
+                        <li>Budget decisions based on guesswork</li>
+                        <li>Audit season chaos and stress</li>
+                        <li>Reactive crisis management vs. strategic planning</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services">
+        <div class="container">
+            <h2>Complete Accounting Services</h2>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon">📊</div>
+                    <h3>General Accounting</h3>
+                    <ul>
+                        <li>Bank reconciliations & month-end close</li>
+                        <li>Financial statements & board reports</li>
+                        <li>Budget variance analysis</li>
+                        <li>Cash flow forecasting</li>
+                        <li>General ledger maintenance</li>
+                    </ul>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🎓</div>
+                    <h3>Student Financial Services</h3>
+                    <ul>
+                        <li>FACTS tuition management</li>
+                        <li>Student accounts & statements</li>
+                        <li>Scholarship administration (all programs)</li>
+                        <li>Collections coordination</li>
+                        <li>Parent communication</li>
+                    </ul>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">✅</div>
+                    <h3>Audit & Compliance</h3>
+                    <ul>
+                        <li>Year-round audit-ready documentation</li>
+                        <li>Digital organization in AASI.NET</li>
+                        <li>Compliance reporting</li>
+                        <li>Auditor coordination</li>
+                        <li>Schedule preparation</li>
+                    </ul>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">💼</div>
+                    <h3>Student Payroll</h3>
+                    <ul>
+                        <li>APS system processing</li>
+                        <li>Work-study program management</li>
+                        <li>Quarterly reporting</li>
+                        <li>1099 preparation</li>
+                        <li>Compliance documentation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cost Comparison Section - COMPLETELY REWRITTEN -->
+    <section class="section-alt">
+        <div class="container">
+            <h2>Investment & Value Analysis</h2>
+            <p class="cost-intro">Let's be transparent about costs and value. The right solution depends on your current situation and what you value most: cost savings, strategic capacity, or both.</p>
+
+            <div class="cost-scenarios">
+                <!-- Scenario 1: Partnership Model -->
+                <div class="scenario-section">
+                    <div class="scenario-header">
+                        <h3>Scenario 1: Strategic Partnership Model</h3>
+                        <p class="scenario-subtitle">You currently have a Business Manager</p>
+                    </div>
+
+                    <div class="comparison-grid">
+                        <div class="comparison-card current">
+                            <h4>Your Current Model</h4>
+                            <ul class="cost-breakdown">
+                                <li>Business Manager: $60,000-70,000</li>
+                                <li>Benefits (30%): $18,000-21,000</li>
+                                <li>Part-time cashier (maybe): $12,000-18,000</li>
+                            </ul>
+                            <div class="cost-total">$90,000-109,000/year</div>
+                            
+                            <div class="reality-check current">
+                                <h5>Current Reality:</h5>
+                                <ul>
+                                    <li>BM spends 70-80% time on data entry</li>
+                                    <li>Books close 30-45 days late</li>
+                                    <li>No time for strategic planning</li>
+                                    <li>Decisions made without analysis</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="comparison-card proposed">
+                            <h4>Partnership Model</h4>
+                            <ul class="cost-breakdown">
+                                <li>Business Manager (strategic): $50,000-60,000</li>
+                                <li>Benefits (30%): $15,000-18,000</li>
+                                <li>Our back-office service: $30,000-36,000</li>
+                                <li>On-site assistant: $12,000-15,000</li>
+                            </ul>
+                            <div class="cost-total">$107,000-129,000/year</div>
+                            
+                            <div class="reality-check proposed">
+                                <h5>New Reality:</h5>
+                                <ul>
+                                    <li>BM spends 70-80% time on strategy</li>
+                                    <li>Books close by 15th monthly</li>
+                                    <li>Forward-looking planning & analysis</li>
+                                    <li>Better board presentations & decisions</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="value-proposition">
+                        <h4>The Value Equation</h4>
+                        <p>Similar or slightly higher cost ($0-20K more), but your business manager transforms from data entry clerk to strategic CFO. Better decisions, proactive planning, stronger financial leadership—that's the real ROI.</p>
+                    </div>
+                </div>
+
+                <!-- Scenario 2: Complete Service -->
+                <div class="scenario-section">
+                    <div class="scenario-header">
+                        <h3>Scenario 2: Complete Service Model</h3>
+                        <p class="scenario-subtitle">You don't currently have a Business Manager</p>
+                    </div>
+
+                    <div class="comparison-grid">
+                        <div class="comparison-card current">
+                            <h4>Your Current Model</h4>
+                            <ul class="cost-breakdown">
+                                <li>Principal doing oversight: (Burnout cost)</li>
+                                <li>Part-time bookkeeper: $15,000-25,000</li>
+                                <li>Or: Business Manager: $55,000-65,000</li>
+                                <li>Benefits (35%): $19,000-23,000</li>
+                            </ul>
+                            <div class="cost-total">$74,000-88,000/year</div>
+                            
+                            <div class="reality-check current">
+                                <h5>Current Reality:</h5>
+                                <ul>
+                                    <li>Books chronically 45-60+ days late</li>
+                                    <li>Solo BM completely overwhelmed</li>
+                                    <li>No strategic financial capacity</li>
+                                    <li>Principal stressed and overextended</li>
+                            </ul>
+                            </div>
+                        </div>
+
+                        <div class="comparison-card proposed">
+                            <h4>Complete Service Model</h4>
+                            <ul class="cost-breakdown">
+                                <li>Professional back-office service: $30,000-36,000</li>
+                                <li>Strategic advisory included: (No extra cost)</li>
+                                <li>On-site assistant: $20,000-25,000</li>
+                                <li>Insurance & continuity: Included</li>
+                            </ul>
+                            <div class="cost-total">$50,000-61,000/year</div>
+                            
+                            <div class="reality-check proposed">
+                                <h5>New Reality:</h5>
+                                <ul>
+                                    <li>Books close by 15th monthly</li>
+                                    <li>Professional team coverage</li>
+                                    <li>Strategic guidance for board</li>
+                                    <li>Principal focuses on education</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="value-proposition">
+                        <h4>The Value Equation</h4>
+                        <p>Save $13,000-37,000 annually while gaining professional accounting execution, strategic advisory, audit-ready systems, and team continuity. Principal finally freed from financial stress.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Budget Reallocation Section - NEW -->
+    <section id="value">
+        <div class="container">
+            <h2>The Real Question: Where Are You Investing?</h2>
+            <p class="pathways-intro">Small Adventist academies operate on razor-thin budgets. Every dollar matters. The question isn't just "How much does the business office cost?"—it's "What value are we getting, and what opportunities are we missing?"</p>
+
+            <div class="value-proposition-section">
+                <div class="value-intro">
+                    <h3 style="color: var(--ocean-dark); text-align: center; margin-bottom: 2rem;">The Hidden Opportunity Cost</h3>
+                    <p style="color: var(--text-medium); font-size: 1.1rem; max-width: 900px; margin: 0 auto 3rem; text-align: center;">
+                        Many schools spend $90K-109K on business office operations (business manager + cashier/clerk) that deliver late financial information and zero strategic capacity. 
+                        Meanwhile, mission-critical roles go unfunded: "We can't afford another cafeteria worker" or "We need an assistant maintenance director but there's no budget."
                     </p>
-                  )}
                 </div>
-              </div>
+
+                <div class="comparison-grid" style="margin-bottom: 4rem;">
+                    <div class="comparison-card current">
+                        <h4>Current Reality at Many Schools</h4>
+                        <p style="color: var(--text-medium); margin-bottom: 1.5rem;">Business office: $90K-109K annually</p>
+                        <ul class="cost-breakdown">
+                            <li>Books close 30-45 days late</li>
+                            <li>No time for strategic analysis</li>
+                            <li>Reactive crisis management</li>
+                            <li>BM working 50+ hours, still behind</li>
+                        </ul>
+                        <div class="reality-check current" style="margin-top: 1.5rem;">
+                            <h5>Meanwhile...</h5>
+                            <ul>
+                                <li>Cafeteria understaffed (no budget)</li>
+                                <li>Maintenance director alone managing 180K+ sq ft</li>
+                                <li>Student life team stretched thin</li>
+                                <li>Mission-critical roles unfunded</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="comparison-card proposed">
+                        <h4>Strategic Budget Reallocation</h4>
+                        <p style="color: var(--text-medium); margin-bottom: 1.5rem;">Better financial management unlocks budget capacity</p>
+                        <ul class="cost-breakdown">
+                            <li>Books close by 15th monthly</li>
+                            <li>Strategic financial leadership</li>
+                            <li>Proactive budget optimization</li>
+                            <li>Professional team coverage</li>
+                        </ul>
+                        <div class="reality-check proposed" style="margin-top: 1.5rem;">
+                            <h5>The Multiplier Effect:</h5>
+                            <ul>
+                                <li>Identify $20K-60K in annual efficiencies</li>
+                                <li>Better vendor negotiations save $5K-15K</li>
+                                <li>Avoid costly mistakes and audit findings</li>
+                                <li>Free budget for operational roles</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, var(--ocean-light) 0%, var(--ocean-pale) 100%); padding: 3rem; border-radius: 15px; margin-bottom: 3rem;">
+                    <h3 style="color: var(--ocean-dark); text-align: center; margin-bottom: 2rem;">What $25K in Savings or Efficiencies Enables</h3>
+                    <div class="services-grid" style="margin-top: 2rem;">
+                        <div style="background: var(--white); padding: 2rem; border-radius: 10px;">
+                            <div style="font-size: 2.5rem; text-align: center; margin-bottom: 1rem;">🍽️</div>
+                            <h4 style="color: var(--ocean-dark); text-align: center; margin-bottom: 0.5rem;">Cafeteria Support</h4>
+                            <p style="color: var(--text-medium); text-align: center; margin: 0;">Full-time cafeteria worker: $22K-28K</p>
+                        </div>
+                        <div style="background: var(--white); padding: 2rem; border-radius: 10px;">
+                            <div style="font-size: 2.5rem; text-align: center; margin-bottom: 1rem;">🔧</div>
+                            <h4 style="color: var(--ocean-dark); text-align: center; margin-bottom: 0.5rem;">Facilities Support</h4>
+                            <p style="color: var(--text-medium); text-align: center; margin: 0;">Assistant maintenance director: $20K-25K (part-time)</p>
+                        </div>
+                        <div style="background: var(--white); padding: 2rem; border-radius: 10px;">
+                            <div style="font-size: 2.5rem; text-align: center; margin-bottom: 1rem;">🧹</div>
+                            <h4 style="color: var(--ocean-dark); text-align: center; margin-bottom: 0.5rem;">Custodial Support</h4>
+                            <p style="color: var(--text-medium); text-align: center; margin: 0;">Additional custodial hours: $12K-15K</p>
+                        </div>
+                        <div style="background: var(--white); padding: 2rem; border-radius: 10px;">
+                            <div style="font-size: 2.5rem; text-align: center; margin-bottom: 1rem;">🎓</div>
+                            <h4 style="color: var(--ocean-dark); text-align: center; margin-bottom: 0.5rem;">Student Life</h4>
+                            <p style="color: var(--text-medium); text-align: center; margin: 0;">Assistant dean or student life support: $15K-20K</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: var(--white); padding: 3rem; border-radius: 15px; box-shadow: 0 4px 20px rgba(44, 95, 124, 0.1);">
+                    <h3 style="color: var(--ocean-dark); text-align: center; margin-bottom: 2rem;">Real-World Scenario: Boarding Academy</h3>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin-bottom: 2rem;">
+                        <div>
+                            <h4 style="color: var(--ocean-medium); margin-bottom: 1rem;">Before Partnership Model</h4>
+                            <ul style="list-style: none; padding: 0; color: var(--text-medium);">
+                                <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--sand-warm);">Business office cost: $105K</li>
+                                <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--sand-warm);">Books 45 days late</li>
+                                <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--sand-warm);">BM working 50+ hours/week</li>
+                                <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--sand-warm);">Cafeteria understaffed</li>
+                                <li style="padding: 0.5rem 0;">Maintenance director overwhelmed</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 style="color: var(--ocean-medium); margin-bottom: 1rem;">After Partnership Model</h4>
+                            <ul style="list-style: none; padding: 0; color: var(--text-medium);">
+                                <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--sand-warm);">Business office cost: $117.5K</li>
+                                <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--sand-warm);">Books close by 15th</li>
+                                <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--sand-warm);">BM has strategic capacity</li>
+                                <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--sand-warm);">Identifies $48K in efficiencies</li>
+                                <li style="padding: 0.5rem 0;"><strong>Funds 2 critical operational roles</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div style="background: linear-gradient(135deg, var(--ocean-medium) 0%, var(--ocean-light) 100%); color: var(--white); padding: 2rem; border-radius: 10px; text-align: center;">
+                        <p style="font-size: 1.2rem; margin: 0;"><strong>Net Result:</strong> School spends $12.5K more on business office but gains $48K in annual efficiencies—enabling a full-time cafeteria worker ($25K) and part-time maintenance assistant ($18K), with $5K remaining for scholarships.</p>
+                    </div>
+                </div>
             </div>
 
-            {/* Price Summary */}
-            <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-lg shadow-lg p-6 text-white">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <DollarSign className="w-5 h-5" />
-                Estimated Investment
-              </h2>
-              
-              <div className="space-y-3">
-                <div>
-                  <p className="text-indigo-200 text-sm">Monthly Service Fee</p>
-                  <p className="text-3xl font-bold">${calculations.estimatedMonthly.toLocaleString()}</p>
-                </div>
-                
-                <div className="border-t border-indigo-400 pt-3">
-                  <p className="text-indigo-200 text-sm">Annual Investment</p>
-                  <p className="text-2xl font-bold">${calculations.estimatedAnnual.toLocaleString()}</p>
-                </div>
-                
-                <div className="border-t border-indigo-400 pt-3">
-                  <p className="text-indigo-200 text-sm">Total Hours/Month</p>
-                  <p className="text-xl font-bold">{calculations.totalHours} hours</p>
-                </div>
-              </div>
-              
-              <button
-                onClick={generateProposal}
-                disabled={!schoolName}
-                className="w-full mt-6 bg-white text-indigo-600 py-3 px-4 rounded-lg font-semibold hover:bg-indigo-50 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                <Download className="w-5 h-5" />
-                Generate Proposal
-              </button>
-              
-              <p className="text-xs text-indigo-200 mt-3 text-center">
-                Preliminary estimate - formal proposal to follow
-              </p>
+            <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: var(--sand-warm); border-radius: 10px;">
+                <h3 style="color: var(--ocean-dark); margin-bottom: 1rem;">The Bottom Line</h3>
+                <p style="font-size: 1.2rem; color: var(--text-dark); max-width: 900px; margin: 0 auto;">
+                    Strategic financial management doesn't just save money—it identifies where to invest for maximum mission impact. The question isn't whether you can afford professional accounting. It's whether you can afford NOT to have strategic financial leadership that unlocks budget capacity for your school's real needs.
+                </p>
             </div>
-          </div>
-
-          {/* Right Column - Services */}
-          <div className="md:col-span-2">
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <CheckSquare className="w-5 h-5" />
-                Select Services
-              </h2>
-
-              {/* Core Services */}
-              <div className="mb-6">
-                <h3 className="font-bold text-gray-700 mb-3 pb-2 border-b-2 border-indigo-200">
-                  Core Services (Included in Base)
-                </h3>
-                <div className="space-y-3">
-                  {Object.entries(services)
-                    .filter(([_, s]) => s.category === 'Core Services')
-                    .map(([key, service]) => (
-                      <div
-                        key={key}
-                        className="bg-indigo-50 p-4 rounded-lg border-2 border-indigo-200"
-                      >
-                        <div className="flex items-start gap-3">
-                          <input
-                            type="checkbox"
-                            checked={service.selected}
-                            onChange={() => toggleService(key)}
-                            className="mt-1 w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
-                          />
-                          <div className="flex-1">
-                            <div className="flex justify-between items-start mb-1">
-                              <h4 className="font-semibold text-gray-800">{service.name}</h4>
-                              <span className="text-sm text-gray-600 font-medium">{service.hours} hrs/mo</span>
-                            </div>
-                            <p className="text-sm text-gray-600">{service.tasks.join(' • ')}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-
-              {/* Student Accounts */}
-              <div className="mb-6">
-                <h3 className="font-bold text-gray-700 mb-3 pb-2 border-b-2 border-green-200">
-                  Student Accounts (Select if applicable)
-                </h3>
-                <div className="space-y-3">
-                  {Object.entries(services)
-                    .filter(([_, s]) => s.category === 'Student Accounts')
-                    .map(([key, service]) => (
-                      <div
-                        key={key}
-                        onClick={() => toggleService(key)}
-                        className={`p-4 rounded-lg border-2 cursor-pointer transition ${
-                          service.selected
-                            ? 'bg-green-50 border-green-400'
-                            : 'bg-gray-50 border-gray-200 hover:border-green-300'
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <input
-                            type="checkbox"
-                            checked={service.selected}
-                            onChange={() => toggleService(key)}
-                            className="mt-1 w-5 h-5 text-green-600 rounded focus:ring-green-500"
-                          />
-                          <div className="flex-1">
-                            <div className="flex justify-between items-start mb-1">
-                              <h4 className="font-semibold text-gray-800">{service.name}</h4>
-                              <span className="text-sm text-gray-600 font-medium">{service.hours} hrs/mo</span>
-                            </div>
-                            <p className="text-sm text-gray-600">{service.tasks.join(' • ')}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-
-              {/* Specialized Services */}
-              <div>
-                <h3 className="font-bold text-gray-700 mb-3 pb-2 border-b-2 border-amber-200">
-                  Specialized Services (Select if applicable)
-                </h3>
-                <div className="space-y-3">
-                  {Object.entries(services)
-                    .filter(([_, s]) => s.category === 'Specialized')
-                    .map(([key, service]) => (
-                      <div
-                        key={key}
-                        onClick={() => toggleService(key)}
-                        className={`p-4 rounded-lg border-2 cursor-pointer transition ${
-                          service.selected
-                            ? 'bg-amber-50 border-amber-400'
-                            : 'bg-gray-50 border-gray-200 hover:border-amber-300'
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <input
-                            type="checkbox"
-                            checked={service.selected}
-                            onChange={() => toggleService(key)}
-                            className="mt-1 w-5 h-5 text-amber-600 rounded focus:ring-amber-500"
-                          />
-                          <div className="flex-1">
-                            <div className="flex justify-between items-start mb-1">
-                              <h4 className="font-semibold text-gray-800">{service.name}</h4>
-                              <span className="text-sm text-gray-600 font-medium">{service.hours} hrs/mo</span>
-                            </div>
-                            <p className="text-sm text-gray-600">{service.tasks.join(' • ')}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
-    </div>
-  );
-};
+    </section>
 
-export default ServiceCalculator;
+    <!-- Why Us Section -->
+    <section id="why-us" class="section-alt">
+        <div class="container">
+            <h2>Not Just Accountants—Adventist Education Specialists</h2>
+            <div class="why-us-grid">
+                <div class="why-card">
+                    <div class="why-icon">🏫</div>
+                    <h3>Lived Experience</h3>
+                    <p>7 years as Adventist boarding school & university student. Ate the cafeteria food, lived in the dorms, worked student jobs. Deep understanding of Adventist education culture.</p>
+                </div>
+                <div class="why-card">
+                    <div class="why-icon">🎯</div>
+                    <h3>Proven Expertise</h3>
+                    <p>6+ years managing accounting at Adventist institutions. Expert in AASI.NET, APS, FACTS, conference systems. Know Zirkle, VA Tax Credit, conference awards, church subsidies.</p>
+                </div>
+                <div class="why-card">
+                    <div class="why-icon">❤️</div>
+                    <h3>Mission Aligned</h3>
+                    <p>Exclusively serve Adventist K-12 schools. Team shares Adventist values. This is our calling, not just business. We understand denominational culture and compliance.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Section -->
+    <section id="process" class="section-alt">
+        <div class="container">
+            <h2>Simple Three-Phase Implementation</h2>
+            <div class="process-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Assessment</h3>
+                    <p><strong>2-4 weeks</strong></p>
+                    <p>On-site visit to understand your systems and needs. Develop customized transition plan with specific scope for your school.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Parallel Operation</h3>
+                    <p><strong>1-2 months</strong></p>
+                    <p>Work alongside current staff. Verify accuracy. Train team. Test all systems and refine based on actual operations.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Full Service</h3>
+                    <p><strong>Month 3+</strong></p>
+                    <p>Complete execution with regular check-ins, optimization, and ongoing support. Continuous improvement and communication.</p>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: var(--ocean-pale); border-radius: 10px;">
+                <p style="font-size: 1.1rem; color: var(--text-dark); margin: 0;"><strong>Recommended Timeline:</strong> Plan now, implement Summer 2026, full operation Fall 2026</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Section -->
+    <section>
+        <div class="container">
+            <h2>Your School Stays In Control</h2>
+            <div class="trust-grid">
+                <div class="trust-column">
+                    <h3>Protection & Security</h3>
+                    <ul>
+                        <li>$2M professional liability insurance</li>
+                        <li>Cyber liability coverage</li>
+                        <li>FERPA-compliant contracts</li>
+                        <li>Encrypted systems & VPN access</li>
+                        <li>Two-factor authentication</li>
+                    </ul>
+                </div>
+                <div class="trust-column">
+                    <h3>Your Authority & Control</h3>
+                    <ul>
+                        <li>School retains all approval authority</li>
+                        <li>Systems remain in your name (AASI.NET, FACTS, APS)</li>
+                        <li>6-month trial with 60-day exit clause</li>
+                        <li>Complete documentation transfer if you leave</li>
+                        <li>No vendor lock-in</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="section-alt">
+        <div class="container">
+            <h2>Questions School Leaders Ask</h2>
+            <div class="faq-container">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        Who has final authority?
+                        <span>▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Your school administration and board retain all approval authority. We execute transactions; you approve them. Same structure as when schools outsource audits or conference handles payroll.
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        Is this GCAS compliant?
+                        <span>▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Yes. This model maintains required fiduciary responsibility and segregation of duties. GCAS evaluates quality of financial records and internal controls, not employment status of accounting staff. We execute with professional quality; your board retains fiduciary responsibility.
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        What if I already have a great business manager?
+                        <span>▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Perfect! That's our Strategic Partnership model. We handle the operational grind (reconciliations, close, data entry, collections) so your business manager can focus on what they do best: strategic planning, budget development, board advisory, and financial leadership. They become your true CFO instead of spending 80% of their time on data entry.
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        What about data security?
+                        <span>▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Professional insurance ($2M liability), FERPA compliance, encrypted systems, documented security protocols, two-factor authentication. All systems remain in your name and under your control. Actually MORE secure than single employee due to professional protocols and insurance coverage.
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        What if it doesn't work out?
+                        <span>▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        6-month trial period with 60-day exit clause. All systems stay in your name. Complete transition support included. No penalties or lock-in provisions. We only succeed if we genuinely add value to your school.
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        Do you work with our conference?
+                        <span>▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Absolutely. We can help facilitate that conversation. Schools have autonomy in vendor relationships. Conference typically appreciates schools finding sustainable solutions to maintain professional financial standards.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA Section -->
+    <section id="contact" class="final-cta">
+        <div class="container">
+            <h2>Ready to Explore If This Could Work For Your School?</h2>
+            <p>No obligation. Let's just have a 30-minute conversation about your current situation and see if this model makes sense.</p>
+            
+            <div class="steps-list">
+                <div class="cta-step">
+                    <div class="cta-step-number">1</div>
+                    <p>30-minute discovery conversation</p>
+                </div>
+                <div class="cta-step">
+                    <div class="cta-step-number">2</div>
+                    <p>Customized preliminary analysis</p>
+                </div>
+                <div class="cta-step">
+                    <div class="cta-step-number">3</div>
+                    <p>Detailed proposal (if it's a good fit)</p>
+                </div>
+            </div>
+
+            <a href="mailto:kmartinphx@gmail.com" class="btn btn-primary" style="font-size: 1.2rem; padding: 1.2rem 3rem;">Schedule Your Discovery Call</a>
+            
+            <p style="margin-top: 2rem; font-size: 0.95rem; opacity: 0.9;">We only work with schools where we can genuinely add value. If this isn't the right fit, we'll tell you.</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Adventist Academy Solutions</h3>
+                    <p>Professional Accounting for Adventist Academies</p>
+                    <p style="margin-top: 1rem;">Helping small Adventist schools focus on their mission through professional financial management</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#pathways">Solutions</a></li>
+                        <li><a href="#services">Services</a></li>
+                        <li><a href="#value">Value & Impact</a></li>
+                        <li><a href="#why-us">Why Us</a></li>
+                        <li><a href="#process">How It Works</a></li>
+                        <li><a href="#faq">FAQ</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <p>📧 kmartinphx@gmail.com</p>
+                    <p>📱 (423) 749-2123</p>
+                    <p style="margin-top: 1rem; font-size: 0.9rem;">Exclusively serving Seventh-day Adventist K-12 Schools</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Adventist Academy Solutions. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // FAQ toggle functionality
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', function() {
+                const answer = this.nextElementSibling;
+                const isOpen = answer.style.display === 'block';
+                
+                // Close all other answers
+                document.querySelectorAll('.faq-answer').forEach(a => {
+                    a.style.display = 'none';
+                });
+                
+                // Toggle current answer
+                answer.style.display = isOpen ? 'none' : 'block';
+            });
+        });
+    </script>
+</body>
+</html>
